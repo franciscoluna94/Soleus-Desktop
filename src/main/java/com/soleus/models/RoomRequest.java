@@ -34,6 +34,10 @@ public class RoomRequest implements Serializable {
 	@Column(name = "ended")
 	private boolean requestEnded;
 
+	public RoomRequest() {
+		
+	}
+	
 	public RoomRequest(int requestId, String requestTopic, String requestItem, String requestDescription, String requestDepartment,
 			boolean requestEnded, String clientRoom) {
 		this.requestId = requestId;

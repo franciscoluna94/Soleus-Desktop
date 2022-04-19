@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.List;
 
 import com.soleus.hibernate.UserModelDAO;
 import com.soleus.hibernate.RoomRequestDAO;
@@ -26,6 +27,7 @@ public class ServerThread extends Thread {
 	private UserModel userToCheck;
 	private UserModel userLogged;
 	private RoomRequest request;
+	private List<RoomRequest> requestList;
 	
 	/* Server Answers */
 	private final String typeOfAnswerSuccess = "OK";
@@ -37,12 +39,17 @@ public class ServerThread extends Thread {
 	private String requestType;
 	private String loginRequest = "LOGIN";
 	private String saveRequest = "ROOM_REQUEST";
+	
+	/* String utils */
+	private String housekeepingDepartment = "HOUSEKEEPING";
+	private String maintenanceDepartmentString = "MAINTENANCE";
 
 	/* Hibernate and hibernate results  */
 	private UserModelDAO hibernateUsers;
 	private RoomRequestDAO hibernateRequests;
-	
 
+	
+	
 	public ServerThread(Socket clientSocket) {
 		this.clientSocket = clientSocket;
 	}
@@ -75,6 +82,7 @@ public class ServerThread extends Thread {
 		}  
 	} // end run
 
+	
 	private void checkUserLogin(ObjectOutputStream output, ObjectInputStream inputStreamReader)
 			throws IOException, ClassNotFoundException {
 
@@ -83,11 +91,19 @@ public class ServerThread extends Thread {
 		userToCheck = (UserModel) reader.readObject();
 		
 		hibernateUsers = new UserModelDAO();
+		hibernateRequests = new RoomRequestDAO();	
 		
 		if (hibernateUsers.checkUserCredentials(userToCheck.getUser(), userToCheck.getPassword())) {
+			
 			writer.writeObject(successAnswer);
 			userLogged = hibernateUsers.getUserModel(userToCheck.getUser());
 			writer.writeObject(userLogged);
+			
+			if (userLogged.getDepartment().equals(housekeepingDepartment) ||
+					userLogged.getDepartment().equals(maintenanceDepartmentString)) {
+				requestList = hibernateRequests.getRequestList(userLogged);
+				writer.writeObject(requestList);			
+			}			
 			
 		} else {
 			writer.writeObject(failAnswer);
