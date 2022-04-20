@@ -41,9 +41,20 @@ public class RoomRequestDAO {
 	public ArrayList<RoomRequest> getRequestList(UserModel user) {
 		
 		Session s = sessionFactory.openSession();
-    	Query q = s.createQuery("FROM RoomRequest WHERE requestDepartment=:userDepartment");
+    	Query q = s.createQuery("FROM RoomRequest WHERE requestDepartment=:userDepartment AND requestEnded = false");
     	q.setParameter("userDepartment", user.getDepartment());
         ArrayList<RoomRequest> requestList = (ArrayList<RoomRequest>) q.list();        
         return requestList;
 	} // end getRequestList
+	
+	public void endRequest(RoomRequest request) {
+		Session s = sessionFactory.openSession();
+        Transaction t = s.beginTransaction();
+        int id = request.getRequestId();
+        RoomRequest endedRequest = s.get(RoomRequest.class, id);
+        endedRequest.setRequestEnded(true);
+        s.update(endedRequest);
+        t.commit();
+        s.close();
+	}
 }

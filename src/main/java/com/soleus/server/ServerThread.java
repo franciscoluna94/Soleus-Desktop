@@ -39,6 +39,7 @@ public class ServerThread extends Thread {
 	private String requestType;
 	private String loginRequest = "LOGIN";
 	private String saveRequest = "ROOM_REQUEST";
+	private String endRequest = "END_REQUEST";
 	
 	/* String utils */
 	private String housekeepingDepartment = "HOUSEKEEPING";
@@ -73,7 +74,9 @@ public class ServerThread extends Thread {
 	        	checkUserLogin(writer, reader);
 	        } else if (requestType.equals(saveRequest)) {
 	        	saveRoomRequest(writer, reader);
-	        }
+	        } else if (requestType.equals(endRequest)) {
+	        	endRoomRequest(writer, reader);
+	        } 
 	        
 		} catch (IOException ex) {
 			ex.printStackTrace();  // DEBUG
@@ -115,6 +118,7 @@ public class ServerThread extends Thread {
 	} // end checkUserLogin
 
 	private void saveRoomRequest(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+
 			throws IOException, ClassNotFoundException {
 		
 		request = (RoomRequest) reader.readObject();
@@ -123,6 +127,20 @@ public class ServerThread extends Thread {
 		hibernateRequests = new RoomRequestDAO();
 		
 		hibernateRequests.saveRequest(request);	
+		writer.writeObject(successAnswer);
+		
+		clientSocket.close();
+
+	} // end saveRequest
+	
+	private void endRoomRequest(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+			throws IOException, ClassNotFoundException {
+		
+		request = (RoomRequest) reader.readObject();
+		
+		hibernateRequests = new RoomRequestDAO();
+		
+		hibernateRequests.endRequest(request);	
 		writer.writeObject(successAnswer);
 		
 		clientSocket.close();
