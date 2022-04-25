@@ -15,8 +15,11 @@ import com.soleus.models.UserModel;
 
 
 public class RoomRequestDAO {
+	
+	
 
 	private static SessionFactory sessionFactory;
+	private final String admin = "ADMIN";
 
 	static {
 		try {
@@ -41,11 +44,18 @@ public class RoomRequestDAO {
 	public ArrayList<RoomRequest> getRequestList(UserModel user) {
 		
 		Session s = sessionFactory.openSession();
-    	Query q = s.createQuery("FROM RoomRequest WHERE requestDepartment=:userDepartment AND requestEnded = false");
-    	q.setParameter("userDepartment", user.getDepartment());
+		Query q;
+		
+		if (user.getDepartment().equals(admin)) {
+			q = s.createQuery("FROM RoomRequest WHERE requestEnded = false");
+		} else {
+			q = s.createQuery("FROM RoomRequest WHERE requestDepartment=:userDepartment AND requestEnded = false");
+	    	q.setParameter("userDepartment", user.getDepartment());
+		}    	
         ArrayList<RoomRequest> requestList = (ArrayList<RoomRequest>) q.list();        
         return requestList;
 	} // end getRequestList
+	
 	
 	public void endRequest(RoomRequest request) {
 		Session s = sessionFactory.openSession();
@@ -56,5 +66,5 @@ public class RoomRequestDAO {
         s.update(endedRequest);
         t.commit();
         s.close();
-	}
+	} // end endRequest
 }
