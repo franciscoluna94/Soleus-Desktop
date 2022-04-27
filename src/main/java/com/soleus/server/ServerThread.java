@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.List;
 
+import javax.crypto.spec.DHPrivateKeySpec;
+
 import com.soleus.hibernate.UserModelDAO;
 import com.soleus.hibernate.RoomRequestDAO;
 import com.soleus.models.ClientRequest;
@@ -24,10 +26,11 @@ public class ServerThread extends Thread {
 
 	/* Models */
 	private ClientRequest clientRequest;
-	private UserModel userToCheck;
+	private UserModel userReceived;
 	private UserModel userLogged;
 	private RoomRequest request;
 	private List<RoomRequest> requestList;
+	private List<UserModel> userList;
 	
 	/* Server Answers */
 	private final String typeOfAnswerSuccess = "OK";
@@ -41,6 +44,11 @@ public class ServerThread extends Thread {
 	private String saveRequest = "ROOM_REQUEST";
 	private String endRequest = "END_REQUEST";
 	private String getPendingRequests = "GET_RR_LIST";
+	private String getUsers = "GET_UM_LIST";
+	private String deleteUser = "DELETE_USER";
+	private String createUser = "CREATE_USER";
+	private String modifyUser = "MODIFY_USER";
+	private String getUser = "GET_USER";
 	
 	/* String utils */
 	private String housekeepingDepartment = "HOUSEKEEPING";
@@ -79,6 +87,16 @@ public class ServerThread extends Thread {
 	        	endRoomRequest(writer, reader);
 	        } else if (requestType.equals(getPendingRequests)) {
 	        	getRoomRequestList(writer, reader);
+	        } else if (requestType.equals(getUsers)) {
+	        	getUserModelList(writer, reader);
+	        } else if (requestType.equals(deleteUser)) {
+	        	deleteUserModel(writer, reader);
+	        } else if (requestType.equals(createUser)) {
+	        	createUserModel(writer, reader);
+	        } else if (requestType.equals(modifyUser)) {
+	        	updateUserModel(writer, reader);
+	        } else if (requestType.equals(getUser)) {
+	        	getUser(writer, reader);
 	        } 
 	        
 		} catch (IOException ex) {
@@ -94,15 +112,15 @@ public class ServerThread extends Thread {
 
 		System.out.println("cliente conectado"); // DEBUG
 		
-		userToCheck = (UserModel) reader.readObject();
+		userReceived = (UserModel) reader.readObject();
 		
 		hibernateUsers = new UserModelDAO();
 		hibernateRequests = new RoomRequestDAO();	
 		
-		if (hibernateUsers.checkUserCredentials(userToCheck.getUser(), userToCheck.getPassword())) {
+		if (hibernateUsers.checkUserCredentials(userReceived.getUser(), userReceived.getPassword())) {
 			
 			writer.writeObject(successAnswer);
-			userLogged = hibernateUsers.getUserModel(userToCheck.getUser());
+			userLogged = hibernateUsers.getUserModel(userReceived.getUser());
 			writer.writeObject(userLogged);
 			
 			if (userLogged.getDepartment().equals(housekeepingDepartment) ||
@@ -161,4 +179,70 @@ public class ServerThread extends Thread {
 
 	} // end getRoomRequestList
 	
+	private void getUserModelList(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+			throws IOException, ClassNotFoundException {
+		
+		hibernateUsers = new UserModelDAO();	
+		userList = hibernateUsers.getUserList();
+		writer.writeObject(userList);				
+		clientSocket.close();
+
+	} // end getRoomRequestList
+
+	private void deleteUserModel(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+			throws IOException, ClassNotFoundException {
+		
+		userReceived = (UserModel) reader.readObject();
+		
+		hibernateUsers = new UserModelDAO();
+		
+		hibernateUsers.deleteUserModel(userReceived);	
+		
+		clientSocket.close();
+
+	} // end saveRequest
+
+	private void createUserModel(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+
+			throws IOException, ClassNotFoundException {
+		
+		userReceived = (UserModel) reader.readObject();
+		
+		hibernateUsers = new UserModelDAO();
+		
+		hibernateUsers.saveUser(userReceived);	
+		writer.writeObject(successAnswer);
+		
+		clientSocket.close();
+
+	} // end saveRequest
+
+	private void updateUserModel(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+			throws IOException, ClassNotFoundException {
+		
+		userReceived = (UserModel) reader.readObject();
+		
+		hibernateUsers = new UserModelDAO();
+		
+		hibernateUsers.updateUser(userReceived);	
+		writer.writeObject(successAnswer);
+		
+		clientSocket.close();
+
+	} // end updateUserModel
+	
+	private void getUser(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+
+			throws IOException, ClassNotFoundException {
+		
+		userReceived = (UserModel) reader.readObject();
+		
+		hibernateUsers = new UserModelDAO();
+		
+		UserModel userToSend = hibernateUsers.getUser(userReceived);	
+		writer.writeObject(userToSend);
+		
+		clientSocket.close();
+
+	} // end getUser
 }
