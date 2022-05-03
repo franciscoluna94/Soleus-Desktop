@@ -46,6 +46,28 @@ public class UserModelDAO {
 
 	} // end checkUserCredentials
 
+	public boolean checkUserName(String room, String name) {
+		Session s = sessionFactory.openSession();
+		user = (s.get(UserModel.class, room));
+		if (user == null) {
+			return false;
+		} else if (user.getUser().equals(room) && user.getName().equals(name)) {
+			s.close();
+			return true;
+		} else
+			return false;
+	} // end updatePassword
+	
+	public void updateUserPassword(String room, String password) {
+		Session s = sessionFactory.openSession();
+        Transaction t = s.beginTransaction();
+        user = (s.get(UserModel.class, room));
+        user.setPassword(password);
+        s.update(user);
+        t.commit();
+        s.close();
+	}
+	
 	public UserModel getUserModel(String room) {
 		Session s = sessionFactory.openSession();
 		UserModel userLogged = s.get(UserModel.class, room);
@@ -115,6 +137,8 @@ public class UserModelDAO {
         q.setParameter("key", userToSave.getUser() );
         return (q.uniqueResult() != null);
 	}
+	
+	
 
 
 }

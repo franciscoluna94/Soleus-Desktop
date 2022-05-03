@@ -49,6 +49,7 @@ public class ServerThread extends Thread {
 	private String createUser = "CREATE_USER";
 	private String modifyUser = "MODIFY_USER";
 	private String getUser = "GET_USER";
+    private String changePassword = "CHANGE_PASSWORD";
 	
 	/* String utils */
 	private String housekeepingDepartment = "HOUSEKEEPING";
@@ -97,6 +98,8 @@ public class ServerThread extends Thread {
 	        	updateUserModel(writer, reader);
 	        } else if (requestType.equals(getUser)) {
 	        	getUser(writer, reader);
+	        } else if (requestType.equals(changePassword)) {
+	        	updatePassword(writer, reader);
 	        } 
 	        
 		} catch (IOException ex) {
@@ -245,4 +248,37 @@ public class ServerThread extends Thread {
 		clientSocket.close();
 
 	} // end getUser
+
+	private void updatePassword(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+			throws IOException, ClassNotFoundException {
+
+		System.out.println("cliente conectado"); // DEBUG
+		
+		userReceived = (UserModel) reader.readObject();
+		
+		hibernateUsers = new UserModelDAO();
+		hibernateRequests = new RoomRequestDAO();	
+		
+		if (hibernateUsers.checkUserName(userReceived.getUser(), userReceived.getName())) {
+			
+			hibernateUsers.updateUserPassword(userReceived.getUser(), userReceived.getPassword());
+			writer.writeObject(successAnswer);
+			userLogged = hibernateUsers.getUserModel(userReceived.getUser());
+			writer.writeObject(userLogged);
+			
+			if (userLogged.getDepartment().equals(housekeepingDepartment) ||
+					userLogged.getDepartment().equals(maintenanceDepartmentString)) {
+				requestList = hibernateRequests.getRequestList(userLogged);
+				writer.writeObject(requestList);			
+			}			
+			
+		} else {
+			writer.writeObject(failAnswer);
+		}
+
+		clientSocket.close();
+		System.out.println("cliente desconectado"); // DEBUG
+
+	} // end updatePassword
+
 }
