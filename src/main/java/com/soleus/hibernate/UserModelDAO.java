@@ -18,6 +18,9 @@ public class UserModelDAO {
 	private UserModel user;
 	private static SessionFactory sessionFactory;
 	private Transaction transaction;
+	private String housekeepingDepartment = "HOUSEKEEPING";
+	private String maintenanceDepartment = "MAINTENANCE";
+	private String adminDepartment = "ADMIN";
 	
 
 	static {
@@ -58,14 +61,22 @@ public class UserModelDAO {
 			return false;
 	} // end updatePassword
 	
-	public void updateUserPassword(String room, String password) {
+	public boolean updateUserPassword(String room, String password) {
 		Session s = sessionFactory.openSession();
         Transaction t = s.beginTransaction();
+        
         user = (s.get(UserModel.class, room));
-        user.setPassword(password);
-        s.update(user);
-        t.commit();
-        s.close();
+        if (user.getDepartment().equals(maintenanceDepartment) || 
+        		user.getDepartment().equals(housekeepingDepartment) ||
+        		user.getDepartment().equals(adminDepartment)) {
+        	return false;
+        } else {
+        	user.setPassword(password);
+            s.update(user);
+            t.commit();
+            s.close();
+        	return true;
+        }        
 	}
 	
 	public UserModel getUserModel(String room) {
