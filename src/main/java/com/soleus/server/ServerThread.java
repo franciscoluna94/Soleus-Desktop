@@ -6,6 +6,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import javax.crypto.spec.DHPrivateKeySpec;
@@ -53,6 +58,7 @@ public class ServerThread extends Thread {
 	private String modifyUser = "MODIFY_USER";
 	private String getUser = "GET_USER";
 	private String changePassword = "CHANGE_PASSWORD";
+	private String filterRequestList = "GET_FILTER_RR";
 
 	/* String utils */
 	private String housekeepingDepartment = "HOUSEKEEPING";
@@ -98,7 +104,10 @@ public class ServerThread extends Thread {
 				getUser(writer, reader);
 			} else if (requestType.equals(changePassword)) {
 				updatePassword(writer, reader);
+			}else if (requestType.equals(filterRequestList)) {
+				getFilteredRoomRequestList(writer, reader);
 			}
+
 
 		} catch (IOException ex) {
 			ex.printStackTrace(); // DEBUG
@@ -144,6 +153,14 @@ public class ServerThread extends Thread {
 
 		request = (RoomRequest) reader.readObject();
 		request.setRequestEnded(false);
+		LocalTime time =  LocalTime.now();
+		LocalTime requestHour = time.truncatedTo(ChronoUnit.MINUTES);
+		LocalDate day = LocalDate.now();		
+		day.format(DateTimeFormatter
+			    .ofLocalizedDate(FormatStyle.SHORT));
+		String formattedDate = day.format(DateTimeFormatter.ofPattern("dd-MM-yy"));
+		String date = requestHour.toString() + " " + formattedDate;
+		request.setRequestDate(date);
 
 		hibernateRequests = new RoomRequestDAO();
 
@@ -168,6 +185,17 @@ public class ServerThread extends Thread {
 
 	} // end saveRequest
 
+	private void getFilteredRoomRequestList(ObjectOutputStream output, ObjectInputStream inputStreamReader)
+			throws IOException, ClassNotFoundException {
+
+		request = (RoomRequest) reader.readObject();
+		hibernateRequests = new RoomRequestDAO();
+		requestList = hibernateRequests.getRequestList(request);
+		writer.writeObject(requestList);
+		clientSocket.close();
+
+	} // end getFilteredRoomRequestList
+	
 	private void getRoomRequestList(ObjectOutputStream output, ObjectInputStream inputStreamReader)
 			throws IOException, ClassNotFoundException {
 
