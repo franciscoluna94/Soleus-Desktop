@@ -48,21 +48,21 @@ public class ServerThread extends Thread {
 
 	/* Type of client requests */
 	private String requestType;
-	private String loginRequest = "LOGIN";
-	private String saveRequest = "ROOM_REQUEST";
-	private String endRequest = "END_REQUEST";
-	private String getPendingRequests = "GET_RR_LIST";
-	private String getUsers = "GET_UM_LIST";
-	private String deleteUser = "DELETE_USER";
-	private String createUser = "CREATE_USER";
-	private String modifyUser = "MODIFY_USER";
-	private String getUser = "GET_USER";
-	private String changePassword = "CHANGE_PASSWORD";
-	private String filterRequestList = "GET_FILTER_RR";
+	private final String loginRequest = "LOGIN";
+	private final String saveRequest = "ROOM_REQUEST";
+	private final String endRequest = "END_REQUEST";
+	private final String getPendingRequests = "GET_RR_LIST";
+	private final String getUsers = "GET_UM_LIST";
+	private final String deleteUser = "DELETE_USER";
+	private final String createUser = "CREATE_USER";
+	private final String modifyUser = "MODIFY_USER";
+	private final String getUser = "GET_USER";
+	private final String changePassword = "CHANGE_PASSWORD";
+	private final String filterRequestList = "GET_FILTER_RR";
 
 	/* String utils */
-	private String housekeepingDepartment = "HOUSEKEEPING";
-	private String maintenanceDepartment = "MAINTENANCE";
+	private final String housekeepingDepartment = "HOUSEKEEPING";
+	private final String maintenanceDepartment = "MAINTENANCE";
 
 	/* Hibernate and hibernate results */
 	private UserModelDAO hibernateUsers;
@@ -153,14 +153,10 @@ public class ServerThread extends Thread {
 
 		request = (RoomRequest) reader.readObject();
 		request.setRequestEnded(false);
-		LocalTime time =  LocalTime.now();
-		LocalTime requestHour = time.truncatedTo(ChronoUnit.MINUTES);
-		LocalDate day = LocalDate.now();		
-		day.format(DateTimeFormatter
-			    .ofLocalizedDate(FormatStyle.SHORT));
-		String formattedDate = day.format(DateTimeFormatter.ofPattern("dd-MM-yy"));
-		String date = requestHour.toString() + " " + formattedDate;
+		request.setRequestEndDate("Pendiente");
+		String date = getTime();
 		request.setRequestDate(date);
+		
 
 		hibernateRequests = new RoomRequestDAO();
 
@@ -178,7 +174,8 @@ public class ServerThread extends Thread {
 
 		hibernateRequests = new RoomRequestDAO();
 
-		hibernateRequests.endRequest(request);
+		String endDate = getTime();
+		hibernateRequests.endRequest(request, endDate);
 		writer.writeObject(successAnswer);
 
 		clientSocket.close();
@@ -308,5 +305,16 @@ public class ServerThread extends Thread {
 		System.out.println("cliente desconectado"); // DEBUG
 
 	} // end updatePassword
+	
+	private String getTime() {
+		LocalTime time =  LocalTime.now();
+		LocalTime requestHour = time.truncatedTo(ChronoUnit.MINUTES);
+		LocalDate day = LocalDate.now();		
+		day.format(DateTimeFormatter
+			    .ofLocalizedDate(FormatStyle.SHORT));
+		String formattedDate = day.format(DateTimeFormatter.ofPattern("dd-MM-yy"));
+		String date = requestHour.toString() + " " + formattedDate;
+		return date;
+	}
 
 }

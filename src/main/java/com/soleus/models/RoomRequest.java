@@ -33,8 +33,11 @@ public class RoomRequest implements Serializable {
 	private String clientRoom;
 	@Column(name = "request_time")
 	private String requestTime;
+	@Column(name = "request_end")
+	private String requestEndTime;
 	@Column(name = "ended")
 	private boolean requestEnded;
+	
 	
 
 	public RoomRequest() {
@@ -42,7 +45,7 @@ public class RoomRequest implements Serializable {
 	}
 	
 	public RoomRequest(int requestId, String requestTopic, String requestItem, String requestDescription, String requestDepartment,
-			boolean requestEnded, String clientRoom, String requestTime) {
+			boolean requestEnded, String clientRoom, String requestTime, String requestEndTime) {
 		this.requestId = requestId;
 		this.requestTopic = requestTopic;
 		this.requestItem = requestItem;
@@ -51,6 +54,7 @@ public class RoomRequest implements Serializable {
 		this.requestEnded = requestEnded;
 		this.clientRoom = clientRoom;
 		this.requestTime = requestTime;
+		this.requestEndTime = requestEndTime;
 		
 	}
 	
@@ -135,6 +139,14 @@ public class RoomRequest implements Serializable {
 	
 	public void setRequestDate(String date) {
         this.requestTime = date;
+    }
+	
+	public void setRequestEndDate(String date) {
+        this.requestEndTime = date;
+    }
+
+    public String getRequestEndTime() {
+        return requestEndTime;
     }
 	
 

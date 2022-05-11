@@ -15,6 +15,7 @@ public class RoomRequestDAO {
 
 	private static SessionFactory sessionFactory;
 	private final String admin = "ADMIN";
+	private final String client = "CLIENT";
 
 	static {
 		try {
@@ -41,7 +42,10 @@ public class RoomRequestDAO {
 		Session s = sessionFactory.openSession();
 		Query q;
 
-		if (user.getDepartment().equals(admin)) {
+		if (user.getDepartment().equals(client)) {
+			q = s.createQuery("FROM RoomRequest WHERE clientRoom=:userRoom AND requestEnded = false");
+			q.setParameter("userRoom", user.getUser());
+		} else if (user.getDepartment().equals(admin)) {
 			q = s.createQuery("FROM RoomRequest");
 		} else {
 			q = s.createQuery("FROM RoomRequest WHERE requestDepartment=:userDepartment AND requestEnded = false");
@@ -63,12 +67,13 @@ public class RoomRequestDAO {
 		return requestList;
 	} // end getRequestList
 
-	public void endRequest(RoomRequest request) {
+	public void endRequest(RoomRequest request, String endTime) {
 		Session s = sessionFactory.openSession();
 		Transaction t = s.beginTransaction();
 		int id = request.getRequestId();
 		RoomRequest endedRequest = s.get(RoomRequest.class, id);
 		endedRequest.setRequestEnded(true);
+		endedRequest.setRequestEndDate(endTime);
 		s.update(endedRequest);
 		t.commit();
 		s.close();
