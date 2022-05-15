@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -27,6 +28,7 @@ import net.bytebuddy.implementation.bind.annotation.IgnoreForBinding;
 public class ServerThread extends Thread {
 
 	/* Socket utils */
+	private static ServerSocket serverSocket;
 	protected Socket clientSocket;
 	ObjectInputStream reader;
 	ObjectOutputStream writer;
@@ -68,13 +70,32 @@ public class ServerThread extends Thread {
 	private UserModelDAO hibernateUsers;
 	private RoomRequestDAO hibernateRequests;
 
-	public ServerThread(Socket clientSocket) {
-		this.clientSocket = clientSocket;
+	public ServerThread() {
 	}
 
 	public void run() {
 
 		try {
+			
+			try {
+				// creating a new ServerSocket at port 4444
+				serverSocket = new ServerSocket(4444);
+
+			} catch (IOException e) {
+				System.out.println("Could not listen on port: 4444");   // DEBUG
+			}
+
+			System.out.println("Server started. Listening to the port 4444");   // DEBUG
+
+			while (true) {
+				try {
+
+					clientSocket = serverSocket.accept();
+
+				} catch (IOException ex) {
+					System.out.println("Problem in message reading");  // DEBUG
+				}
+
 
 			OutputStream output = clientSocket.getOutputStream();
 			InputStream input = clientSocket.getInputStream();
@@ -106,6 +127,7 @@ public class ServerThread extends Thread {
 				updatePassword(writer, reader);
 			}else if (requestType.equals(filterRequestList)) {
 				getFilteredRoomRequestList(writer, reader);
+			}
 			}
 
 
