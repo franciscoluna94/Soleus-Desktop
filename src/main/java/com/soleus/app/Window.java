@@ -1,4 +1,4 @@
-package app;
+package com.soleus.app;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -38,7 +38,7 @@ public class Window extends JFrame implements ActionListener {
     private void inicializarComponentes() {
     	initiateServerButton = new JButton();
         initiateServerButton.setText("Iniciar");
-        initiateServerButton.setBounds(50, 50, 100, 30); 
+        initiateServerButton.setBounds(100, 65, 100, 30); 
         initiateServerButton.addActionListener(this);    
         this.add(initiateServerButton);
     }
